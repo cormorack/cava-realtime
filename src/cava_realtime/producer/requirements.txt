@@ -1,0 +1,6 @@
+kafka-python
+requests
+obspy
+loguru
+numexpr
+pydantic

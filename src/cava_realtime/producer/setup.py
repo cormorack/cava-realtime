@@ -5,9 +5,14 @@ from setuptools import find_namespace_packages, setup
 with open("README.md") as f:
     long_description = f.read()
 
-inst_reqs = []
+with open('requirements.txt') as f:
+    inst_reqs = f.readlines()
+
+with open('requirements.txt') as f:
+    test_reqs = f.readlines()
+
 extra_reqs = {
-    "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
+    "test": test_reqs,
 }
 
 
@@ -35,4 +40,8 @@ setup(
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
+    setup_requires=["setuptools>=45", "wheel", "setuptools_scm"],
+    entry_points=dict(
+        console_scripts=["crt-producer = cava_realtime.producer.main:app"]
+    ),
 )
