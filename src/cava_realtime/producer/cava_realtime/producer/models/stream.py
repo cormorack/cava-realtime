@@ -1,4 +1,3 @@
-import os
 import datetime
 import time
 import requests
@@ -6,6 +5,7 @@ import json
 import threading
 from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
+from cava_realtime.producer.settings import producer_settings
 
 # logger = logging.getLogger(__name__)
 # logging.root.setLevel(level=logging.INFO)
@@ -23,6 +23,8 @@ unix_epoch = datetime.datetime(1970, 1, 1)
 NTP_DELTA = (unix_epoch - ntp_epoch).total_seconds()
 
 POOL = ThreadPoolExecutor()
+API_USERNAME = producer_settings.ooi_username
+API_TOKEN = producer_settings.ooi_token
 
 
 # convert timestamps
@@ -52,8 +54,8 @@ class StreamProducer(threading.Thread):
         self.instrument_name = instrument_name
         self.last_time = last_time
         self._params = {"beginDT": None, "limit": 1000}
-        self.__ooi_username = os.environ.get("API_USERNAME")
-        self.__ooi_token = os.environ.get("API_TOKEN")
+        self.__ooi_username = API_USERNAME
+        self.__ooi_token = API_TOKEN
         self._begin_time = None
         self.requesting = False
         self._kafka_producer = kafka_producer
@@ -68,7 +70,7 @@ class StreamProducer(threading.Thread):
         else:
             logger.info(
                 self._display_status(
-                    f"Not started. Kafka producer object not found."
+                    "Not started. Kafka producer object not found."
                 )
             )
 
@@ -130,13 +132,13 @@ class StreamProducer(threading.Thread):
         logger.info(self._display_status(f"Bytesize {len(data_bytes)}"))
 
     def _run_producer(self):
-        logger.info(self._display_status(f"Started."))
+        logger.info(self._display_status("Started."))
         self._begin_time = datetime.datetime.utcnow() - datetime.timedelta(
             seconds=10
         )
         while self.requesting:
             if self._killed:
-                logger.info(self._display_status(f"Killing Thread"))
+                logger.info(self._display_status("Killing Thread"))
                 break
             begin_time_str = self._begin_time.strftime(
                 "%Y-%m-%dT%H:%M:%S.000Z"

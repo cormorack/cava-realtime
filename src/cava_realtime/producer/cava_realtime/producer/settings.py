@@ -13,6 +13,9 @@ class ProducerSettings(BaseSettings):
     kafka_host: str = 'localhost'
     kafka_port: str = '9092'
 
+    # CAVA API Settings
+    metadata_url: str = 'https://api-development.ooica.net/metadata'
+
     class Config:
         """model config"""
 

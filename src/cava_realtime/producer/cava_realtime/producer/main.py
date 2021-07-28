@@ -6,8 +6,6 @@ from cava_realtime.producer.models.stream import StreamProducer
 from cava_realtime.producer.models.obs import ObsProducer
 from cava_realtime.producer.settings import producer_settings
 
-API_USERNAME = producer_settings.ooi_username
-API_TOKEN = producer_settings.ooi_token
 KAFKA_HOST = producer_settings.kafka_host
 KAFKA_PORT = producer_settings.kafka_port
 DEVELOPMENT = producer_settings.development
@@ -19,7 +17,7 @@ app = typer.Typer()
 def fetch_instruments_catalog():
     try:
         req = requests.get(
-            "https://api-dev.ooica.net/metadata/get_instruments_catalog"
+            f"{producer_settings.metadata_url.strip('/')}/get_instruments_catalog"  # noqa
         )
         instruments_catalog = req.json()
     except Exception:
@@ -54,6 +52,8 @@ def stream():
                 "RS01SBPS-PC01A-4C-FLORDD103-streamed-flort_d_data_record",
             ]
         ]
+    else:
+        instruments_catalog = fetch_instruments_catalog()
     realtime_list = [
         StreamProducer(
             **{
