@@ -5,9 +5,10 @@ from setuptools import find_namespace_packages, setup
 with open("README.md") as f:
     long_description = f.read()
 
-inst_reqs = []
+inst_reqs = ["fastapi", "streamz", "confluent-kafka"]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
+    "server": ["uvicorn>=0.12.0"],
 }
 
 
