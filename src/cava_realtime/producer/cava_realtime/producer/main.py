@@ -27,7 +27,7 @@ def fetch_instruments_catalog():
     return instruments_catalog
 
 
-@app.command()
+@app.command(help="Start streaming data into provided kafka cluster.")
 def stream():
     instruments_catalog = fetch_instruments_catalog()
     logger.info(f"{KAFKA_HOST}:{KAFKA_PORT}")
