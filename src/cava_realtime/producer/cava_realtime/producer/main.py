@@ -52,8 +52,6 @@ def stream():
                 "RS01SBPS-PC01A-4C-FLORDD103-streamed-flort_d_data_record",
             ]
         ]
-    else:
-        instruments_catalog = fetch_instruments_catalog()
     realtime_list = [
         StreamProducer(
             **{

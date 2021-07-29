@@ -1,5 +1,5 @@
-from fastapi import APIRouter
-from fastapi import WebSocket
+from fastapi import APIRouter, WebSocket
+from fastapi.responses import HTMLResponse
 from loguru import logger
 from starlette.endpoints import WebSocketEndpoint
 from streamz import Stream
@@ -13,6 +13,31 @@ KAFKA_CONF = {
 }
 router = APIRouter()
 
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TEST</title>
+    </head>
+    <body>
+        <h1>WebSocket Test</h1>
+        <h2>RS01SBPS-SF01A-2A-CTDPFA102-streamed-ctdpf_sbe43_sample</h2>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var ws = new WebSocket("ws://localhost:8000/realtime/RS01SBPS-SF01A-2A-CTDPFA102-streamed-ctdpf_sbe43_sample");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+        </script>
+    </body>
+</html>
+"""
+
 
 @router.get("/sources")
 def get_sources():
@@ -23,6 +48,19 @@ def get_sources():
             AVAILABLE_TOPICS.keys(),
         )
     )
+
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(f"Message text was: {data}")
+
+
+@router.get("/test")
+async def test_websocket():
+    return HTMLResponse(html)
 
 
 @router.websocket_route('/{ref}')

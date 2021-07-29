@@ -8,14 +8,14 @@ with open("README.md") as f:
 inst_reqs = ["fastapi", "streamz", "confluent-kafka"]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
-    "server": ["uvicorn>=0.12.0"],
+    "server": ["uvicorn[standard]>=0.12.0"],
 }
 
 
 setup(
     name="cava_realtime.application",
     version="0.1.0",
-    description=u"The interactive oceans realtime server built on top of FastAPI",
+    description=u"The interactive oceans realtime server built on top of FastAPI",  # noqa
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
