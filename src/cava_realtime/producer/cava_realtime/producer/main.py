@@ -75,7 +75,8 @@ def stream():
         for inst in instruments_catalog
     ]
 
-    realtime_list.append(ObsProducer(kafka_producer=producer))
+    # NOTE: 2021-07-29 -- Not produce iris seismic data right now.
+    # realtime_list.append(ObsProducer(kafka_producer=producer))
 
     for st in realtime_list:
         st.start()

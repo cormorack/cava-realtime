@@ -1,5 +1,6 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from loguru import logger
 from starlette.endpoints import WebSocketEndpoint
 from streamz import Stream
@@ -8,35 +9,19 @@ import json
 from cava_realtime.application.settings import api_config
 from cava_realtime.application.store import AVAILABLE_TOPICS
 
+try:
+    from importlib.resources import files as resources_files  # type: ignore
+except ImportError:
+    # Try backported to PY<39 `importlib_resources`.
+    from importlib_resources import files as resources_files  # type: ignore
+
 KAFKA_CONF = {
     'bootstrap.servers': f'{api_config.kafka_host}:{api_config.kafka_port}'  # noqa
 }
 router = APIRouter()
-
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>TEST</title>
-    </head>
-    <body>
-        <h1>WebSocket Test</h1>
-        <h2>RS01SBPS-SF01A-2A-CTDPFA102-streamed-ctdpf_sbe43_sample</h2>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/realtime/RS01SBPS-SF01A-2A-CTDPFA102-streamed-ctdpf_sbe43_sample");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-        </script>
-    </body>
-</html>
-"""
+templates = Jinja2Templates(
+    directory=str(resources_files(__package__) / "templates")
+)
 
 
 @router.get("/sources")
@@ -50,17 +35,11 @@ def get_sources():
     )
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Message text was: {data}")
-
-
-@router.get("/test")
-async def test_websocket():
-    return HTMLResponse(html)
+@router.get("/test/{ref}", response_class=HTMLResponse)
+async def test_websocket(request: Request, ref: str):
+    return templates.TemplateResponse(
+        "realtime-test.html", {"request": request, "ref": ref}
+    )
 
 
 @router.websocket_route('/{ref}')
@@ -91,11 +70,11 @@ class WebsocketConsumer(WebSocketEndpoint):
             conf = KAFKA_CONF.copy()
             conf.update({'group.id': f'{ref}__group'})
 
-            stream = Stream.from_kafka(
+            self.stream = Stream.from_kafka(
                 [topicname],
                 conf,
             )
-            self.stream_json = stream.map(json.loads).sink(
+            self.stream_json = self.stream.map(json.loads).sink(
                 self.send_consumer_message, websocket
             )
             self.stream_json.start()
@@ -110,6 +89,9 @@ class WebsocketConsumer(WebSocketEndpoint):
     ) -> None:
         if self.stream_json:
             self.stream_json.destroy()
+
+        if self.stream:
+            self.stream._close_consumer()
         logger.info("Disconnected")
 
     async def send_consumer_message(

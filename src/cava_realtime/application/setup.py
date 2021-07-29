@@ -5,7 +5,7 @@ from setuptools import find_namespace_packages, setup
 with open("README.md") as f:
     long_description = f.read()
 
-inst_reqs = ["fastapi", "streamz", "confluent-kafka", "jinja2"]
+inst_reqs = ["fastapi", "streamz", "confluent-kafka", "jinja2", "importlib_resources"]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
     "server": ["uvicorn[standard]>=0.12.0"],
@@ -33,6 +33,8 @@ setup(
     url="https://github.com/cormorack/cava-realtime",
     license="MIT",
     packages=find_namespace_packages(exclude=["tests*"]),
+    package_data={"cava_realtime": ["application/templates/*.html"]},
+    include_package_data=True,
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
