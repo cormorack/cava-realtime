@@ -89,7 +89,7 @@ class WebsocketConsumer(WebSocketEndpoint):
             logger.info(f"Connected to {ref}")
 
             conf = KAFKA_CONF.copy()
-            conf.update({'group.id': 'ctd_group'})
+            conf.update({'group.id': f'{ref}__group'})
 
             stream = Stream.from_kafka(
                 [topicname],

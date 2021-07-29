@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from loguru import logger
 from lxml import etree
@@ -41,6 +42,10 @@ ACCEL_LIST = [
     'HYSB1-HNN',
     'HYSB1-HNZ',
 ]
+
+
+def seconds_to_datetime(seconds):
+    return datetime.utcfromtimestamp(seconds)
 
 
 class ObsProducer(threading.Thread):
@@ -111,7 +116,12 @@ class ObsProducer(threading.Thread):
             ion_func = obs_bb_ground_velocity
 
         result = {'ref': ref, 'data': {}}
-        result['data']['time'] = list(trace.times('timestamp'))
+        result['data']['time'] = list(
+            map(
+                lambda t: seconds_to_datetime(t).isoformat(),
+                trace.times('timestamp'),
+            )
+        )
         result['data'][data_param] = list(ion_func(trace.data))
 
         self._send_data(f"{ref}__raw", result)
