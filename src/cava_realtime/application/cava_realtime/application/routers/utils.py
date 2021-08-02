@@ -7,7 +7,11 @@ def get_available_topics(conf: dict):
     available_topics = {}
     try:
         consumer = AdminClient(conf)
-        available_topics = consumer.list_topics().topics
+        available_topics = {
+            k: v
+            for k, v in consumer.list_topics().topics.items()
+            if '__consumer_offsets' not in k
+        }
     except Exception as e:
         warnings.warn(e)
 
