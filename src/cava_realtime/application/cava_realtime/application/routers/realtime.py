@@ -5,9 +5,10 @@ from loguru import logger
 from starlette.endpoints import WebSocketEndpoint
 from streamz import Stream
 import json
+from uuid import uuid4
 
 from cava_realtime.application.settings import api_config
-from cava_realtime.application.store import AVAILABLE_TOPICS
+from cava_realtime.application.routers.utils import get_available_topics
 
 try:
     from importlib.resources import files as resources_files  # type: ignore
@@ -26,11 +27,12 @@ templates = Jinja2Templates(
 
 @router.get("/sources")
 def get_sources():
+    available_topics = get_available_topics(KAFKA_CONF)
 
     return list(
         map(
             lambda k: k.replace('__raw', ''),
-            AVAILABLE_TOPICS.keys(),
+            available_topics.keys(),
         )
     )
 
@@ -59,16 +61,20 @@ class WebsocketConsumer(WebSocketEndpoint):
         await websocket.send_json(
             {"status": "accepted", "message": "connected"}
         )
-
+        available_topics = get_available_topics(KAFKA_CONF)
         topicname = f"{ref}__raw"
-        if topicname in AVAILABLE_TOPICS:
+        if topicname in available_topics:
             await websocket.send_json(
-                {"status": "success", "message": "consumer connected"}
+                {
+                    "status": "success",
+                    "message": f"consumer connected for {topicname}"
+                }
             )
             logger.info(f"Connected to {ref}")
+            uid = uuid4().hex
 
             conf = KAFKA_CONF.copy()
-            conf.update({'group.id': f'{ref}__group'})
+            conf.update({'group.id': uid, 'auto.offset.reset': 'earliest'})
 
             self.stream = Stream.from_kafka(
                 [topicname],

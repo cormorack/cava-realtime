@@ -3,15 +3,12 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from loguru import logger
-
-from confluent_kafka import Consumer
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from cava_realtime.application.settings import api_config
-from cava_realtime.application.store import AVAILABLE_TOPICS
 from cava_realtime.application.routers import realtime
 
-SERVICE_ID = "realtime"
+SERVICE_ID = api_config.service_id
 
 app = FastAPI(
     title=api_config.name,
@@ -32,28 +29,10 @@ if api_config.cors_origins:
     )
 
 
-@app.get("/healthz", description="Health Check", tags=["Health Check"])
+@app.get("/{SERVICE_ID}/healthz", description="Health Check", tags=["Health Check"])
 def ping():
     """Health check."""
     return {"ping": "pong!"}
-
-
-@app.on_event("startup")
-def startup_event():
-    logger.info("Get available topics.")
-    conf = realtime.KAFKA_CONF.copy()
-    conf.update({'group.id': 'admin'})
-
-    consumer = Consumer(conf)
-    cluster_meta = consumer.list_topics()
-    AVAILABLE_TOPICS.update(
-        {
-            k: v
-            for k, v in cluster_meta.topics.items()
-            if '__consumer_offsets' not in k
-        }
-    )
-    logger.info(f"Number of topics available: {len(AVAILABLE_TOPICS.keys())}.")
 
 
 app.include_router(
@@ -63,4 +42,10 @@ app.include_router(
 
 @app.get("/", include_in_schema=False)
 def home():
-    return RedirectResponse(url="/realtime")
+    return RedirectResponse(url=f"/{SERVICE_ID}")
+
+
+# Prometheus instrumentation
+Instrumentator().instrument(app).expose(
+    app, endpoint=f"/{SERVICE_ID}/metrics", include_in_schema=False
+)

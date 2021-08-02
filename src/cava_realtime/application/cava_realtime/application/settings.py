@@ -7,6 +7,7 @@ class ApiSettings(pydantic.BaseSettings):
     """FASTAPI application settings."""
 
     name: str = "CAVA Realtime"
+    service_id: str = "realtime"
     cors_origins: str = "*"
     cachecontrol: str = "public, max-age=3600"
     debug: bool = False

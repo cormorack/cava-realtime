@@ -5,7 +5,14 @@ from setuptools import find_namespace_packages, setup
 with open("README.md") as f:
     long_description = f.read()
 
-inst_reqs = ["fastapi", "streamz", "confluent-kafka", "jinja2", "importlib_resources"]
+inst_reqs = [
+    "fastapi",
+    "streamz",
+    "confluent-kafka",
+    "jinja2",
+    "importlib_resources",
+    "pip install prometheus-fastapi-instrumentator",
+]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
     "server": ["uvicorn[standard]>=0.12.0"],
