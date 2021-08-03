@@ -11,7 +11,7 @@ inst_reqs = [
     "confluent-kafka",
     "jinja2",
     "importlib_resources",
-    "pip install prometheus-fastapi-instrumentator",
+    "prometheus-fastapi-instrumentator",
 ]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
