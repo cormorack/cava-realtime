@@ -85,6 +85,7 @@ class WebsocketConsumer(WebSocketEndpoint):
             )
             self.stream_json.start()
         else:
+            self.stream = None
             self.stream_json = None
             message = f"{ref} not found."
             logger.warning(message)

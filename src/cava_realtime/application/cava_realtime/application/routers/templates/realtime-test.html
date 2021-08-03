@@ -12,7 +12,7 @@
         <ul id='messages' style="max-height: 500px; overflow-y: scroll;">
         </ul>
         <script>
-            var ws = new WebSocket("ws://localhost:8000/realtime/{{ ref }}");
+            var ws = new WebSocket(`ws://${location.host}/realtime/{{ ref }}`);
             ws.onmessage = function(event) {
                 var messages = document.getElementById('messages')
                 var message = document.createElement('li')
