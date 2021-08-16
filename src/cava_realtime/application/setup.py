@@ -12,6 +12,7 @@ inst_reqs = [
     "jinja2",
     "importlib_resources",
     "prometheus-fastapi-instrumentator",
+    "loguru"
 ]
 extra_reqs = {
     "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],

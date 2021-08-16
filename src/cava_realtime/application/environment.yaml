@@ -1,0 +1,15 @@
+name: app-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - fastapi
+  - streamz
+  - python-confluent-kafka
+  - jinja2
+  - importlib_resources
+  - prometheus-fastapi-instrumentator
+  - loguru
+  - uvicorn
+  - gunicorn
+  - pip=20

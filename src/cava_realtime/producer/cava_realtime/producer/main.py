@@ -31,7 +31,15 @@ def fetch_instruments_catalog():
 def stream():
     instruments_catalog = fetch_instruments_catalog()
     logger.info(f"{KAFKA_HOST}:{KAFKA_PORT}")
-    producer = KafkaProducer(bootstrap_servers=f"{KAFKA_HOST}:{KAFKA_PORT}")
+    ready = False
+    while not ready:
+        try:
+            producer = KafkaProducer(
+                bootstrap_servers=f"{KAFKA_HOST}:{KAFKA_PORT}"
+            )
+            ready = True
+        except Exception as e:
+            logger.warning(e)
     if DEVELOPMENT is True:
         instruments_catalog = [
             i

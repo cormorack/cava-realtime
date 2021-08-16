@@ -1,6 +1,34 @@
 version: "3.2"
 
 services:
+    cr-producer:
+        build:
+            context: ../../src/cava_realtime
+            dockerfile: ../../resources/docker/producer.dockerfile
+        image: cr-producer:latest
+        environment:
+            - CR_PRODUCER_OOI_USERNAME=${OOI_USERNAME}
+            - CR_PRODUCER_OOI_TOKEN=${OOI_TOKEN}
+            - CR_PRODUCER_KAFKA_HOST=kafka
+            - CR_PRODUCER_KAFKA_PORT=29092
+        depends_on:
+            - kafka
+        networks:
+            - io2network
+    cr-server:
+        build:
+            context: ../../src/cava_realtime/application
+            dockerfile: ../../../resources/docker/Dockerfile
+        image: cr-server:latest
+        ports:
+            - 8080:80
+        environment:
+            - CR_API_KAFKA_HOST=kafka
+            - CR_API_KAFKA_PORT=29092
+        depends_on:
+            - kafka
+        networks:
+            - io2network
     zookeeper:
         image: bitnami/zookeeper:3.6.3
         environment:
@@ -15,7 +43,7 @@ services:
             - ALLOW_PLAINTEXT_LISTENER=yes
             - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
             - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
-            - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
+            - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:29092
             - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
             - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
             - KAFKA_CFG_MESSAGE_MAX_BYTES=2000000
