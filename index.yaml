@@ -1,4 +1,20 @@
 apiVersion: v1
 entries:
-  cava-realtime: []
-generated: "2021-08-17T11:34:02.304548893-07:00"
+  cava-realtime:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2021-08-17T12:34:04.732248116-07:00"
+    dependencies:
+    - condition: kafka.enabled
+      name: kafka
+      repository: https://charts.bitnami.com/bitnami
+      version: 14.0.1
+    description: Cava Realtime Service Helm Chart
+    digest: 85153be15be071a25cd554e6fcbe6e14421589153a1270b2657417b7ab8f53f4
+    icon: https://interactiveoceans.washington.edu/wp-content/uploads/2018/12/interactive-oceans-logo-symbol-only_sm-150x150.png
+    name: cava-realtime
+    type: application
+    urls:
+    - https://cormorack.github.io/cava-realtime/cava-realtime-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-08-17T12:34:04.725048728-07:00"
