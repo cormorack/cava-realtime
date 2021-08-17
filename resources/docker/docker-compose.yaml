@@ -5,7 +5,7 @@ services:
         build:
             context: ../../src/cava_realtime
             dockerfile: ../../resources/docker/producer.dockerfile
-        image: cr-producer:latest
+        image: cormorack/cr-producer:latest
         environment:
             - CR_PRODUCER_OOI_USERNAME=${OOI_USERNAME}
             - CR_PRODUCER_OOI_TOKEN=${OOI_TOKEN}
@@ -19,7 +19,7 @@ services:
         build:
             context: ../../src/cava_realtime/application
             dockerfile: ../../../resources/docker/Dockerfile
-        image: cr-server:latest
+        image: cormorack/cr-server:latest
         ports:
             - 8080:80
         environment:

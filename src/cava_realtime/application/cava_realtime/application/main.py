@@ -29,7 +29,7 @@ if api_config.cors_origins:
     )
 
 
-@app.get("/{SERVICE_ID}/healthz", description="Health Check", tags=["Health Check"])
+@app.get(f"/{SERVICE_ID}/healthz", description="Health Check", tags=["Health Check"])
 def ping():
     """Health check."""
     return {"ping": "pong!"}
