@@ -1,0 +1,72 @@
+# Default values for cava-realtime.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+nameOverride: cava-realtime
+# fullnameOverride: cava-realtime
+path: /realtime
+development: false
+service:
+  targetPort: 80
+  portName: http
+  type: ClusterIP
+  port: 80
+  containerPort: 80
+  servicePortName: http
+image:
+  repository: cormorack/cr-server
+  tag: "set-by-chartpress"
+  pullSecrets: []
+  pullPolicy: Always
+replicas: 1
+resources: {}
+env:
+  - name: CR_API_KAFKA_HOST
+    value: "kafka"
+  - name: CR_API_KAFKA_PORT
+    value: "29092"
+restartPolicy: Always
+nodeSelector: {}
+ingress:
+  expose: false
+
+  # If secure, must provide tls
+  secure: false
+
+  # host: "test.example.com"
+  host: ""
+
+  # Adds tls for domain certification
+  # Certificate must be created ahead of time
+  # tls:
+  #   secretName: cava-realtime-cert
+  tls: {}
+
+# CAVA Producer
+producer:
+  enabled: true
+  nodeSelector: {}
+  image:
+    repository: cormorack/cr-producer
+    tag: "set-by-chartpress"
+    pullSecrets: []
+    pullPolicy: Always
+  env:
+    - name: CR_PRODUCER_OOI_USERNAME
+      value: ""
+    - name: CR_PRODUCER_OOI_TOKEN
+      value: ""
+    - name: CR_PRODUCER_KAFKA_HOST
+      value: "kafka"
+    - name: CR_PRODUCER_KAFKA_PORT
+      value: "29092"
+  resources: {}
+
+kafka:
+  enabled: true
+  maxMessageBytes: 2000000
+  logRetentionHours: 1
+  extraEnvVars:
+    - name: KAFKA_CFG_OFFSETS_RETENTION_MINUTES
+      value: "2"
+  zookeeper:
+    enabled: true
