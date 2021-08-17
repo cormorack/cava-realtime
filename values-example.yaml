@@ -1,0 +1,15 @@
+ingress:
+  expose: true
+
+producer:
+  env:
+    - name: CR_PRODUCER_OOI_USERNAME
+      valueFrom:
+        secretKeyRef:
+          key: ooi-username
+          name: cava-secrets
+    - name: CR_PRODUCER_OOI_TOKEN
+      valueFrom:
+        secretKeyRef:
+          key: ooi-token
+          name: cava-secrets
