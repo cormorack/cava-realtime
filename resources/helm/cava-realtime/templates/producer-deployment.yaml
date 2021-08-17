@@ -1,4 +1,4 @@
-{{- $serviceName := "cava-realtime-producer" -}}
+{{- $serviceName := printf "%s-producer" .Release.Name -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,18 +30,18 @@ spec:
       containers:
         - name: {{ $serviceName }}
           env:
-            # === Gunicorn Settings Hardcoded here ======
-            # Since fsspec doesn't support uvloop, defaults to asyncio for now ...
-            - name: WORKER_CLASS
-              value: "uvicorn.workers.UvicornH11Worker"
-            # Defaults to 1 worker per core so it can be scaled via multiple pods ...
-            # Set scaling with replicas of this pod
-            - name: WORKERS_PER_CORE
-              value: "1"
-            - name: WEB_CONCURRENCY
-              value: "1"
-            - name: MAX_WORKERS
-              value: "1" 
+            - name: CR_PRODUCER_KAFKA_HOST
+              {{- if .Values.kafkaHost }}
+              value: {{ .Values.kafkaHost | quote }}
+              {{- else }}
+              value: "{{ .Release.Name }}-kafka"
+              {{- end }}
+            - name: CR_PRODUCER_KAFKA_PORT
+              {{- if .Values.kafkaPort }}
+              value: {{ .Values.kafkaPort | quote }}
+              {{- else }}
+              value: "9092"
+              {{- end }}
           {{- if .Values.producer.env }}
             {{- toYaml .Values.producer.env | nindent 12 }}
           {{- end }}

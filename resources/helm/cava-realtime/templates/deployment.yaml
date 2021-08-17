@@ -31,9 +31,6 @@ spec:
         - name: {{ $serviceName }}
           env:
             # === Gunicorn Settings Hardcoded here ======
-            # Since fsspec doesn't support uvloop, defaults to asyncio for now ...
-            - name: WORKER_CLASS
-              value: "uvicorn.workers.UvicornH11Worker"
             # Defaults to 1 worker per core so it can be scaled via multiple pods ...
             # Set scaling with replicas of this pod
             - name: WORKERS_PER_CORE
@@ -42,6 +39,19 @@ spec:
               value: "1"
             - name: MAX_WORKERS
               value: "1" 
+            # === End gunicorv settings ===
+            - name: CR_API_KAFKA_HOST
+              {{- if .Values.kafkaHost }}
+              value: {{ .Values.kafkaHost | quote }}
+              {{- else }}
+              value: "{{ .Release.Name }}-kafka"
+              {{- end }}
+            - name: CR_API_KAFKA_PORT
+              {{- if .Values.kafkaPort }}
+              value: {{ .Values.kafkaPort | quote }}
+              {{- else }}
+              value: "9092"
+              {{- end }}
           {{- if .Values.env }}
             {{- toYaml .Values.env | nindent 12 }}
           {{- end }}

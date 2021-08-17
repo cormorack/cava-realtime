@@ -19,11 +19,7 @@ image:
   pullPolicy: Always
 replicas: 1
 resources: {}
-env:
-  - name: CR_API_KAFKA_HOST
-    value: "kafka"
-  - name: CR_API_KAFKA_PORT
-    value: "29092"
+env: []
 restartPolicy: Always
 nodeSelector: {}
 ingress:
@@ -41,6 +37,10 @@ ingress:
   #   secretName: cava-realtime-cert
   tls: {}
 
+# Kafka Connection details for producer and server
+kafkaHost: ""
+kafkaPort: ""
+
 # CAVA Producer
 producer:
   enabled: true
@@ -56,16 +56,12 @@ producer:
       value: ""
     - name: CR_PRODUCER_OOI_TOKEN
       value: ""
-    - name: CR_PRODUCER_KAFKA_HOST
-      value: "kafka"
-    - name: CR_PRODUCER_KAFKA_PORT
-      value: "29092"
   resources: {}
 
 kafka:
   enabled: true
-  maxMessageBytes: 2000000
-  logRetentionHours: 1
+  maxMessageBytes: "2000000"
+  logRetentionHours: "1"
   extraEnvVars:
     - name: KAFKA_CFG_OFFSETS_RETENTION_MINUTES
       value: "2"
