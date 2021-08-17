@@ -62,6 +62,7 @@ kafka:
   enabled: true
   maxMessageBytes: "2000000"
   logRetentionHours: "1"
+  logRetentionBytes: "-1"
   extraEnvVars:
     - name: KAFKA_CFG_OFFSETS_RETENTION_MINUTES
       value: "2"
