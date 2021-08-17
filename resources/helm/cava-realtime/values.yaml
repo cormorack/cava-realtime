@@ -50,6 +50,7 @@ producer:
     tag: "set-by-chartpress"
     pullSecrets: []
     pullPolicy: Always
+  restartPolicy: Always
   env:
     - name: CR_PRODUCER_OOI_USERNAME
       value: ""

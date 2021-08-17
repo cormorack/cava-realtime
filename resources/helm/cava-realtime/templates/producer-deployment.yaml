@@ -1,0 +1,51 @@
+{{- $serviceName := "cava-realtime-producer" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  labels:
+    {{- include "cava-realtime.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $serviceName }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "cava-realtime.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ $serviceName }}
+  template:
+    metadata:
+      labels:
+        {{- include "cava-realtime.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ $serviceName }}
+    spec:
+      {{- with .Values.producer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      imagePullSecrets:
+        {{- toYaml .Values.producer.image.pullSecrets | nindent 8 }}
+      restartPolicy: {{ .Values.producer.restartPolicy }}
+      containers:
+        - name: {{ $serviceName }}
+          env:
+            # === Gunicorn Settings Hardcoded here ======
+            # Since fsspec doesn't support uvloop, defaults to asyncio for now ...
+            - name: WORKER_CLASS
+              value: "uvicorn.workers.UvicornH11Worker"
+            # Defaults to 1 worker per core so it can be scaled via multiple pods ...
+            # Set scaling with replicas of this pod
+            - name: WORKERS_PER_CORE
+              value: "1"
+            - name: WEB_CONCURRENCY
+              value: "1"
+            - name: MAX_WORKERS
+              value: "1" 
+          {{- if .Values.producer.env }}
+            {{- toYaml .Values.producer.env | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.producer.image.repository }}:{{ .Values.producer.image.tag }}"
+          imagePullPolicy: {{ .Values.producer.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.producer.resources | nindent 12 }}
