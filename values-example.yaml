@@ -1,3 +1,5 @@
+development: true
+
 ingress:
   expose: true
 
