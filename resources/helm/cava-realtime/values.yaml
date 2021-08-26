@@ -63,8 +63,17 @@ kafka:
   maxMessageBytes: "2000000"
   logRetentionHours: "1"
   logRetentionBytes: "-1"
+  logRetentionCheckIntervalMs: "5000"
   extraEnvVars:
     - name: KAFKA_CFG_OFFSETS_RETENTION_MINUTES
       value: "2"
+    - name: KAFKA_CFG_LOG_CLEANUP_POLICY
+      value: "delete"
+    - name: KAFKA_CFG_LOG_RETENTION_MS
+      value: "900000" # 15 minutes
+    - name: KAFKA_CFG_LOG_ROLL_MS
+      value: "900000" # 15 minutes
+    - name: KAFKA_CFG_LOG_SEGMENT_DELETE_DELAY_MS
+      value: "1"
   zookeeper:
     enabled: true
