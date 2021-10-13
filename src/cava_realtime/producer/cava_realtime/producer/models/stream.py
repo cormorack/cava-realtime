@@ -128,7 +128,7 @@ class StreamProducer(threading.Thread):
         stream = {"ref": self.ref, "data": data}
         data_bytes = json.dumps(stream).encode("utf-8")
         # print data points returned
-        self._kafka_producer.send(self.topic, data_bytes)
+        self._kafka_producer.send(self.topic, data_bytes, key=self.ref.encode("utf-8"))
         logger.info(self._display_status(f"Bytesize {len(data_bytes)}"))
 
     def _run_producer(self):
