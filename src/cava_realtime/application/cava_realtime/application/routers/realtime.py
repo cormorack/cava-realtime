@@ -27,7 +27,9 @@ templates = Jinja2Templates(
 
 @router.get("/sources")
 def get_sources():
-    available_topics = get_available_topics(KAFKA_CONF)
+    conf = KAFKA_CONF.copy()
+    conf.update({'group.id': 'sources-endpoint'})
+    available_topics = get_available_topics(conf)
 
     return list(
         map(
@@ -61,20 +63,21 @@ class WebsocketConsumer(WebSocketEndpoint):
         await websocket.send_json(
             {"status": "accepted", "message": "connected"}
         )
-        available_topics = get_available_topics(KAFKA_CONF)
+        uid = uuid4().hex
+        conf = KAFKA_CONF.copy()
+        conf.update({'group.id': uid})
+        available_topics = get_available_topics(conf)
         topicname = f"{ref}__raw"
         if topicname in available_topics:
             await websocket.send_json(
                 {
                     "status": "success",
-                    "message": f"consumer connected for {topicname}"
+                    "message": f"consumer connected for {topicname}",
                 }
             )
             logger.info(f"Connected to {ref}")
-            uid = uuid4().hex
 
-            conf = KAFKA_CONF.copy()
-            conf.update({'group.id': uid, 'auto.offset.reset': 'earliest'})
+            conf.update({'auto.offset.reset': 'earliest'})
 
             self.stream = Stream.from_kafka(
                 [topicname],
