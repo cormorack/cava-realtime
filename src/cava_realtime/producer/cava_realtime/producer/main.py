@@ -3,7 +3,7 @@ import typer
 from loguru import logger
 from kafka import KafkaProducer
 from cava_realtime.producer.models.stream import StreamProducer
-from cava_realtime.producer.models.obs import ObsProducer
+# from cava_realtime.producer.models.obs import ObsProducer
 from cava_realtime.producer.settings import producer_settings
 
 KAFKA_HOST = producer_settings.kafka_host
