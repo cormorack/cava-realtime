@@ -128,7 +128,9 @@ class StreamProducer(threading.Thread):
         stream = {"ref": self.ref, "data": data}
         data_bytes = json.dumps(stream).encode("utf-8")
         # print data points returned
-        self._kafka_producer.send(self.topic, data_bytes, key=self.ref.encode("utf-8"))
+        self._kafka_producer.send(
+            self.topic, data_bytes, key=self.ref.encode("utf-8")
+        )
         logger.info(self._display_status(f"Bytesize {len(data_bytes)}"))
 
     def _run_producer(self):
@@ -155,36 +157,45 @@ class StreamProducer(threading.Thread):
             # request complete, if not 200, log error and try again
             response = data_future.result()
             if response.status_code != 200:
-                logger.info(
+                logger.warning(
                     self._display_status(
-                        "Error fetching data: "
-                        + str(response.json()["message"]["status"])
+                        f"Error fetching data: {response.json()['message']['status']}"
                     )
                 )
                 self._send_data()
                 time.sleep(0.1)
                 continue
 
-            # store json response
-            data = response.json()
+            try:
+                # store json response
+                data = response.json()
 
-            # use extract_keys function to inform users about whether
-            # or not data is being returned. parse data in json response
-            # for input parameter and corresponding timestamp
-            data = self._extract_keys(data)
+                # use extract_keys function to inform users about whether
+                # or not data is being returned. parse data in json response
+                # for input parameter and corresponding timestamp
+                data = self._extract_keys(data)
 
-            # if no data is returned, try again
-            if not data["time"]:
+                # if no data is returned, try again
+                if not data["time"]:
+                    time.sleep(0.1)
+                    continue
+
+                # set beginDT to time stamp of last data point returned
+                self.last_time = data["time"][-1]
+                self._begin_time = ntp_seconds_to_datetime(self.last_time)
+                data["time"] = list(
+                    map(
+                        lambda t: ntp_seconds_to_datetime(t).isoformat(),
+                        data["time"],
+                    )
+                )
+                self._send_data(data)
+            except Exception as e:
+                logger.warning(
+                    self._display_status(
+                        f"Error found ({e}): {response.content}"
+                    )
+                )
+                self._send_data()
                 time.sleep(0.1)
                 continue
-
-            # set beginDT to time stamp of last data point returned
-            self.last_time = data["time"][-1]
-            self._begin_time = ntp_seconds_to_datetime(self.last_time)
-            data["time"] = list(
-                map(
-                    lambda t: ntp_seconds_to_datetime(t).isoformat(),
-                    data["time"],
-                )
-            )
-            self._send_data(data)
