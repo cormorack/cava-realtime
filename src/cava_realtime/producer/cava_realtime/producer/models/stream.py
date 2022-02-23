@@ -128,7 +128,9 @@ class StreamProducer(threading.Thread):
         stream = {"ref": self.ref, "data": data}
         data_bytes = json.dumps(stream).encode("utf-8")
         # print data points returned
-        self._kafka_producer.send(self.topic, data_bytes, key=self.ref.encode("utf-8"))
+        self._kafka_producer.send(
+            self.topic, data_bytes, key=self.ref.encode("utf-8")
+        )
         logger.info(self._display_status(f"Bytesize {len(data_bytes)}"))
 
     def _run_producer(self):
@@ -157,8 +159,7 @@ class StreamProducer(threading.Thread):
             if response.status_code != 200:
                 logger.warning(
                     self._display_status(
-                        "Error fetching data: "
-                        + str(response.json()["message"]["status"])
+                        f"Error fetching data: {response.json()['message']['status']}"
                     )
                 )
                 self._send_data()
@@ -191,7 +192,9 @@ class StreamProducer(threading.Thread):
                 self._send_data(data)
             except Exception as e:
                 logger.warning(
-                    self._display_status(f"Error found ({e}): {response.content}")
+                    self._display_status(
+                        f"Error found ({e}): {response.content}"
+                    )
                 )
                 self._send_data()
                 time.sleep(0.1)
