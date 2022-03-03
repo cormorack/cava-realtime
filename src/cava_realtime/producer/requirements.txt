@@ -1,5 +1,7 @@
 kafka-python
 httpx
+pendulum
+asyncio
 obspy
 loguru
 numexpr

@@ -3,7 +3,7 @@ from pydantic import BaseSettings
 
 class ProducerSettings(BaseSettings):
     """Application settings."""
-    development: bool = True
+    development: bool = False
 
     # OOI M2M Settings
     ooi_username: str
