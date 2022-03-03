@@ -1,5 +1,5 @@
 kafka-python
-requests
+httpx
 obspy
 loguru
 numexpr

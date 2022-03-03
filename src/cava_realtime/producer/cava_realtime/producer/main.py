@@ -1,4 +1,4 @@
-import requests
+import httpx
 import typer
 from loguru import logger
 from kafka import KafkaProducer
@@ -16,7 +16,7 @@ app = typer.Typer()
 
 def fetch_instruments_catalog():
     try:
-        req = requests.get(
+        req = httpx.get(
             f"{producer_settings.metadata_url.strip('/')}/get_instruments_catalog"  # noqa
         )
         instruments_catalog = req.json()

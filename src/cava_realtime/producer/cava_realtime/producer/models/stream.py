@@ -1,6 +1,6 @@
 import datetime
 import time
-import requests
+import httpx
 import json
 import threading
 from loguru import logger
@@ -98,7 +98,7 @@ class StreamProducer(threading.Thread):
     def _get_future_data(self):
         auth = (self.__ooi_username, self.__ooi_token)
         return POOL.submit(
-            requests.get, self.request_url, params=self._params, auth=auth
+            httpx.get, self.request_url, params=self._params, auth=auth
         )
 
     def _extract_keys(self, data):
