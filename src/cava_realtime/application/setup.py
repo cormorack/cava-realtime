@@ -12,10 +12,11 @@ inst_reqs = [
     "jinja2",
     "importlib_resources",
     "prometheus-fastapi-instrumentator",
-    "loguru"
+    "loguru",
+    "httpx"
 ]
 extra_reqs = {
-    "test": ["pytest", "pytest-cov", "pytest-asyncio", "requests"],
+    "test": ["pytest", "pytest-cov", "pytest-asyncio"],
     "server": ["uvicorn[standard]>=0.12.0"],
 }
 
