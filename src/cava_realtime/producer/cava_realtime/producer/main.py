@@ -105,7 +105,7 @@ async def run_producer(realtime_list):
 
 
 @app.command(help="Start streaming data into provided kafka cluster.")
-def stream(disable_kafka: bool = False):
+def stream(disable_kafka: bool = False, max_connections: int = 20):
     logger.info("Streaming producer starting.")
     instruments_catalog = fetch_instruments_catalog()
     producer = None
@@ -131,7 +131,7 @@ def stream(disable_kafka: bool = False):
     # realtime_list.append(ObsProducer(kafka_producer=producer))
 
     loop = asyncio.get_event_loop()
-    limits = httpx.Limits(max_connections=10)
+    limits = httpx.Limits(max_connections=max_connections)
     client = httpx.AsyncClient(auth=(API_USERNAME, API_TOKEN), limits=limits)
 
     # streamed_instruments = loop.run_until_complete(

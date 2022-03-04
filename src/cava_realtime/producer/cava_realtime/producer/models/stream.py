@@ -90,7 +90,7 @@ class StreamProducer:
             )
 
     def _extract_keys(self, data):
-        rdict = {key: [] for key in self.parameters}
+        rdict = {}
         min_time = self.last_time
         for record in data:
             if record['time'] <= min_time:
@@ -98,8 +98,11 @@ class StreamProducer:
                 time_r = ntp_seconds_to_datetime(time_r)
                 time_r = time_r.strftime("%Y-%m-%d %H:%M:%S.000Z")
                 continue
-            for key in self.parameters:
-                rdict[key].append(record[key])
+            for key, value in record.items():
+                # Only save floats and ints
+                if any(isinstance(value, dtype) for dtype in [int, float]):
+                    rdict.setdefault(key, [])
+                    rdict.get(key).append(value)
         logger.info(
             self._display_status(
                 f"Found {len(rdict['time'])} new data points since {self._begin_time}"
