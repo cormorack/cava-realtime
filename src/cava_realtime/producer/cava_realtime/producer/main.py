@@ -85,38 +85,29 @@ async def get_streaming_instruments(instruments_catalog, client):
     return streamed_instruments
 
 
-async def run_producer(realtime_list):
-    dev_instruments = [
-        "RS03AXBS-LJ03A-12-CTDPFB301-streamed-ctdpf_optode_sample",
-        "RS01SLBS-LJ01A-12-CTDPFB101-streamed-ctdpf_optode_sample",
-        "RS01SBPS-PC01A-4A-CTDPFA103-streamed-ctdpf_optode_sample",
-        "RS03AXPS-SF03A-2A-CTDPFA302-streamed-ctdpf_sbe43_sample",
-        "RS03AXPS-PC03A-4A-CTDPFA303-streamed-ctdpf_optode_sample",
-        "RS01SBPS-SF01A-2A-CTDPFA102-streamed-ctdpf_sbe43_sample",
-        "CE02SHBP-LJ01D-06-CTDBPN106-streamed-ctdbp_no_sample",
-        "CE04OSBP-LJ01C-06-CTDBPO108-streamed-ctdbp_no_sample",
-        "RS03AXPS-PC03A-4C-FLORDD303-streamed-flort_d_data_record",
-        "RS03AXPS-SF03A-3A-FLORTD301-streamed-flort_d_data_record",
-        "RS01SBPS-SF01A-3A-FLORTD101-streamed-flort_d_data_record",
-        "RS01SBPS-PC01A-4C-FLORDD103-streamed-flort_d_data_record",
-    ]
+async def start_rt(rt):
+    task = None
     while True:
-        if DEVELOPMENT is True:
-            coros = [
-                rt.request_data()
-                for rt in realtime_list
-                if rt.ref in dev_instruments
-            ]
+        refdes = rt.ref
+        if task is None or task.done() is True:
+            logger.debug(f"Sending a new task for {refdes}")
+            task = asyncio.create_task(rt.request_data())
         else:
-            coros = [rt.request_data() for rt in realtime_list]
-        data = await asyncio.gather(*coros)
-        logger.info(f"{len(data)} streams fetched.")
+            logger.debug(f"Waiting data for {refdes}")
+        # Only request every 5 seconds
+        await asyncio.sleep(10)
+
+
+async def run_producer(realtime_list):
+    logger.info("Producer is running.")
+    coros = [start_rt(rt) for rt in realtime_list]
+    await asyncio.gather(*coros)
 
 
 @app.command(help="Start streaming data into provided kafka cluster.")
 def stream(disable_kafka: bool = False):
+    logger.info("Streaming producer starting.")
     instruments_catalog = fetch_instruments_catalog()
-    logger.info(f"{KAFKA_HOST}:{KAFKA_PORT}")
     producer = None
     if disable_kafka is False:
         ready = False
@@ -129,6 +120,12 @@ def stream(disable_kafka: bool = False):
             except Exception as e:
                 logger.warning(e)
                 time.sleep(10)
+        logger.info("Connected to kafka. ({KAFKA_HOST}:{KAFKA_PORT})")
+    else:
+        logger.info("Kafka connection disabled.")
+
+    if producer_settings.development:
+        logger.info("Development mode enabled.")
 
     # NOTE: 2021-07-29 -- Not produce iris seismic data right now.
     # realtime_list.append(ObsProducer(kafka_producer=producer))
@@ -137,35 +134,70 @@ def stream(disable_kafka: bool = False):
     limits = httpx.Limits(max_connections=10)
     client = httpx.AsyncClient(auth=(API_USERNAME, API_TOKEN), limits=limits)
 
-    streamed_instruments = loop.run_until_complete(
-        get_streaming_instruments(instruments_catalog, client)
+    # streamed_instruments = loop.run_until_complete(
+    #     get_streaming_instruments(instruments_catalog, client)
+    # )
+    realtime_list = []
+    for inst in instruments_catalog:
+        if inst.get('stream_method') == 'streamed':
+            if not any(
+                s in inst['stream_rd']
+                # Filter these streams!
+                for s in [
+                    '15s',
+                    '24hr',
+                    'configuration',
+                    'coefficients',
+                    'engineering',
+                    'settings',
+                    '_cal',
+                    'data_header',
+                    'voltage',
+                    'metadata',
+                    'config',
+                    'status',
+                    'hardware',
+                    'leveling',
+                    'identification_string',
+                    'ancillary_system_data',
+                    'transmit_path',
+                    'test',
+                    'dev',
+                    'clock_data',
+                    'motor_current',
+                    'event_counter',
+                    'reference',
+                    'dark_sample'
+                ]
+            ):
+                refdes = inst['data_table']
+                if DEVELOPMENT is True:
+                    if refdes not in producer_settings.dev_instruments:
+                        continue
+                stream_producer = StreamProducer(
+                    **{
+                        'ref': inst['data_table'],
+                        'parameters': inst['parameter_rd'].split(','),
+                        'request_url': '/'.join(
+                            [
+                                BASE_URL,
+                                inst['site_rd'],
+                                inst['infra_rd'],
+                                inst['inst_rd'],
+                                inst['stream_method'],
+                                inst['stream_rd'],
+                            ]
+                        ),
+                        'topic': f"{inst['data_table']}__raw",
+                        'instrument_name': inst['instrument']['instrument_name'],
+                        'kafka_producer': producer,
+                        'client': client,
+                    }
+                )
+                realtime_list.append(stream_producer)
+    logger.info(
+        f"{len(realtime_list)} streams will be fetched."  # noqa
     )
-
-    realtime_list = [
-        StreamProducer(
-            **{
-                'ref': inst['data_table'],
-                'parameters': inst['parameter_rd'].split(','),
-                'request_url': '/'.join(
-                    [
-                        BASE_URL,
-                        inst['site_rd'],
-                        inst['infra_rd'],
-                        inst['inst_rd'],
-                        inst['stream_method'],
-                        inst['stream_rd'],
-                    ]
-                ),
-                'topic': f"{inst['data_table']}__raw",
-                'instrument_name': inst['instrument']['instrument_name'],
-                'kafka_producer': producer,
-                'client': client,
-            }
-        )
-        for inst in streamed_instruments
-        if not any(s in inst['stream_rd'] for s in ['15s', '24hr'])
-    ]
-
     loop.run_until_complete(run_producer(realtime_list))
 
 
