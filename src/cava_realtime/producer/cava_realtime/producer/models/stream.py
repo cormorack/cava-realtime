@@ -99,10 +99,8 @@ class StreamProducer:
                 time_r = time_r.strftime("%Y-%m-%d %H:%M:%S.000Z")
                 continue
             for key, value in record.items():
-                # Only save floats and ints
-                if any(isinstance(value, dtype) for dtype in [int, float]):
-                    rdict.setdefault(key, [])
-                    rdict.get(key).append(value)
+                rdict.setdefault(key, [])
+                rdict.get(key).append(value)
         logger.info(
             self._display_status(
                 f"Found {len(rdict['time'])} new data points since {self._begin_time}"
@@ -111,17 +109,17 @@ class StreamProducer:
         return rdict
 
     async def request_data(self):
-        if self.__no_data_count == 1:
+        if self.__no_data_count == 10:
             self.__paused = True
 
         if self.__paused is True:
             # If the stream requests are paused
-            # for a day, then restart it
+            # for 15 minutes, then restart it
             time_since_request = (
                 datetime.datetime.utcnow()
                 - self.last_time
             )
-            if time_since_request >= datetime.timedelta(days=1):
+            if time_since_request >= datetime.timedelta(minutes=15):
                 self.__paused = False
                 self.__no_data_count = 0
                 self.last_time = 0
