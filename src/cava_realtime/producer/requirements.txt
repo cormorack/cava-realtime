@@ -6,3 +6,4 @@ obspy
 loguru
 numexpr
 pydantic
+xarray

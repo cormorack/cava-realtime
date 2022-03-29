@@ -5,7 +5,7 @@ from setuptools import find_namespace_packages, setup
 with open("README.md") as f:
     long_description = f.read()
 
-inst_reqs = ["typer", "cava_realtime.producer"]
+inst_reqs = ["typer", "cava_realtime.producer", "click==8.0.4"]
 
 
 setup(
