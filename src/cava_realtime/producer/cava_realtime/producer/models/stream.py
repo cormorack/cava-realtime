@@ -2,6 +2,8 @@ import datetime
 import httpx
 import json
 from loguru import logger
+import xarray as xr
+from dateutil import parser
 from cava_realtime.producer.settings import producer_settings
 
 # logger = logging.getLogger(__name__)
@@ -13,21 +15,19 @@ from cava_realtime.producer.settings import producer_settings
 # handler.setFormatter(formatter)
 # logging.root.addHandler(handler)
 
-# time stamps are returned in time since 1900, so we subtract 70 years from
-# the time output using the ntp_delta variable
-ntp_epoch = datetime.datetime(1900, 1, 1)
-unix_epoch = datetime.datetime(1970, 1, 1)
-NTP_DELTA = (unix_epoch - ntp_epoch).total_seconds()
-
 API_USERNAME = producer_settings.ooi_username
 API_TOKEN = producer_settings.ooi_token
 
-
 # convert timestamps
+default_time_units = 'seconds since 1900-01-01 00:00:00'
+default_calendar = 'gregorian'
+
 def ntp_seconds_to_datetime(ntp_seconds):
-    return datetime.datetime.utcfromtimestamp(ntp_seconds - NTP_DELTA).replace(
-        microsecond=0
-    )
+    npdt = xr.coding.times.decode_cf_datetime(ntp_seconds, units=default_time_units, calendar=default_calendar)
+    return parser.parse(str(npdt))
+
+def datetime_to_ntp_seconds(input_datetime):
+    return float(next(i for i in xr.coding.times.encode_cf_datetime(input_datetime, units=default_time_units, calendar=default_calendar)))
 
 
 class StreamProducer:
@@ -92,6 +92,8 @@ class StreamProducer:
     def _extract_keys(self, data):
         rdict = {}
         min_time = self.last_time
+        if isinstance(min_time, datetime.datetime):
+            min_time = datetime_to_ntp_seconds(min_time)
         for record in data:
             if record['time'] <= min_time:
                 time_r = record['time']
